@@ -2,17 +2,16 @@
 --Start of Global Scope---------------------------------------------------------
 
 -- Create OPC UA server instance
--- luacheck: globals gServer
-gServer = OPCUA.Server.create()
+Server = OPCUA.Server.create()
 --The server can be bound to a specific interface, using the following line.
---OPCUA.Server.setInterface(server, "ETH2")
-OPCUA.Server.setApplicationName(gServer, 'SampleOPCUAServer')
+--OPCUA.Server.setInterface(Server, "ETH2")
+OPCUA.Server.setApplicationName(Server, 'SampleOPCUAServer')
 
 --Creation of namespace and adding it the server.
 --Namespaces are organizing the address space.
 --Each server can have one or more user defined namespaces.
 local namespace = OPCUA.Server.Namespace.create()
-OPCUA.Server.setNamespaces(gServer, namespace)
+OPCUA.Server.setNamespaces(Server, namespace)
 --Every namespace has an index. 0 and 1 are reserved for OPC UA standard namespaces
 OPCUA.Server.Namespace.setIndex(namespace, 2)
 
@@ -39,26 +38,26 @@ OPCUA.Server.Node.addReference(rootNode, 'ORGANIZES', variableNode)
 OPCUA.Server.Namespace.setNodes(namespace, allNodes)
 
 -- Starting the server
-OPCUA.Server.start(gServer)
+OPCUA.Server.start(Server)
 
--- Creation of periodic timer and registration of "gIncrementVariable" function
--- luacheck: globals gTimer
-gTimer = Timer.create()
-Timer.setExpirationTime(gTimer, 1000)
-Timer.setPeriodic(gTimer, true)
-Timer.register(gTimer, 'OnExpired', 'gIncrementVariable')
-Timer.start(gTimer)
+-- Creation of periodic timer
+local timer = Timer.create()
+Timer.setExpirationTime(timer, 1000)
+Timer.setPeriodic(timer, true)
+Timer.start(timer)
 
 --End of Global Scope-----------------------------------------------------------
 
 --Start of Function and Event Scope---------------------------------------------
 
--- Function is called periodically by timer and increments sample variable
--- luacheck: globals gIncrementVariable
-function gIncrementVariable()
+---Function is called periodically by timer and increments sample variable
+local function incrementVariable()
   local currentValue = OPCUA.Server.Node.getValue(variableNode)
   print('Current variable value is: ' .. currentValue)
   OPCUA.Server.Node.setValue(variableNode, currentValue + 1)
 end
+
+-- Registration of "incrementVariable" function
+Timer.register(timer, 'OnExpired', incrementVariable)
 
 --End of Function and Event Scope------------------------------------------------
